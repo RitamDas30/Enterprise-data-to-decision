@@ -12,18 +12,13 @@ To design and implement a scalable, modular data platform that supports:
 - Insight delivery via APIs and dashboards
 
 ## Architecture Overview
-The platform follows a layered enterprise architecture:
-1. Data Ingestion (Batch & Streaming)
-2. Data Processing & Quality
-3. Data Storage (Lake & Warehouse)
-4. Analytics & Decision Intelligence
-5. Insight Delivery (APIs & Visualization)
+This project implements an enterprise-style data-to-decision pipeline:
+Ingestion → Cleaning → Harmonization → Quality Enforcement → Analytics → Decisions.
 
-## Technology Stack
-- Python
-- SQL (PostgreSQL)
-- FastAPI
-- Pandas
-- Docker
-
-
+## Key Capabilities
+- Batch ingestion of transactional data
+- Contract-based data quality enforcement
+- Business KPI computation
+- Decision signal generation
+- Persisted analytics outputs
+- API exposure for downstream systems

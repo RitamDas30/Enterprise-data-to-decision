@@ -4,6 +4,10 @@ from ingestion.batch.batch_ingest import prepare_raw
 from processing.pipeline_controller import run_processing_pipeline
 from processing.quality.quality_report import generate_quality_report
 
+from analytics.kpis.revenue_kpis import compute_revenue_kpis
+from analytics.persist_analytics import persist_kpis
+
+
 SOURCE_PATH = "ingestion/batch/sources/online_retail/online_retail_II.csv"
 
 def main():
@@ -21,6 +25,18 @@ def main():
 
     print("\nPIPELINE EXECUTED SUCCESSFULLY")
     print("Quality Report:")
+
+    print("Computing KPIs...")
+    kpis = compute_revenue_kpis(curated_df)
+    print("KPIs:", kpis)
+
+    print("Persisting KPIs...")
+    path = persist_kpis(kpis)
+    print(f"KPIs persisted at: {path}")
+
+
+
+
     for k, v in report.items():
         print(f"{k}: {v}")
 
