@@ -1,0 +1,32 @@
+[
+  {
+    "customer_id": "CUST_001",
+    "total_amount": 240.50,
+    "country": "United Kingdom",
+    "transaction_date": "2024-01-01"
+  },
+  {
+    "customer_id": "CUST_002",
+    "total_amount": 310.00,
+    "country": "Germany",
+    "transaction_date": "2024-01-02"
+  },
+  {
+    "customer_id": "CUST_003",
+    "total_amount": 180.75,
+    "country": "France",
+    "transaction_date": "2024-01-03"
+  },
+  {
+    "customer_id": "CUST_004",
+    "total_amount": 295.20,
+    "country": "United Kingdom",
+    "transaction_date": "2024-01-04"
+  },
+  {
+    "customer_id": "CUST_005",
+    "total_amount": 260.10,
+    "country": "Spain",
+    "transaction_date": "2024-01-05"
+  }
+]

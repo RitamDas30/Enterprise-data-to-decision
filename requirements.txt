@@ -2,3 +2,5 @@ pandas
 pytest
 fastapi
 uvicorn
+streamlit
+requests

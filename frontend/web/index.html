@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Data-to-Decision</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        nature: {
+                            50: '#f7f7f5',  /* Alabaster */
+                            100: '#e3e3e0', /* Warm Grey */
+                            200: '#c8c8c5',
+                            500: '#8c8c88',
+                            800: '#4a4a48', /* Charcoal */
+                            900: '#2b2b2a',
+                        },
+                        sage: {
+                            50: '#f2fcf5',
+                            100: '#e1f7e6',
+                            500: '#22c55e',
+                            600: '#16a34a', /* Primary Action */
+                            800: '#166534',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f7f7f5; }
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="text-nature-800 antialiased selection:bg-sage-100 selection:text-sage-800">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- COMPONENTS ---
+
+        // 1. Header Component
+        const Header = () => (
+            <header class="pt-12 pb-8 text-center animate-fade-in">
+                <div class="inline-flex items-center justify-center p-3 mb-4 bg-white rounded-2xl shadow-sm border border-nature-100">
+                    <i data-lucide="leaf" class="text-sage-600 w-6 h-6"></i>
+                </div>
+                <h1 class="text-3xl font-medium tracking-tight text-nature-900 mb-2">Data Intelligence</h1>
+                <p class="text-nature-500 font-light text-lg">Upload transactions to reveal insights.</p>
+            </header>
+        );
+
+        // 2. KPI Card Component
+        const KPICard = ({ title, value, icon, delay }) => (
+            <div 
+                className={`bg-white p-6 rounded-2xl shadow-sm border border-nature-100 transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-sage-200 animate-slide-up`}
+                style={{ animationDelay: delay }}
+            >
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-nature-500 text-sm font-medium uppercase tracking-wide">{title}</span>
+                    <div class="p-2 bg-nature-50 rounded-full text-nature-500">
+                        <i data-lucide={icon} class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="text-2xl font-semibold text-nature-900">{value}</div>
+            </div>
+        );
+
+        // 3. Alert Component
+        const DecisionAlert = ({ type, message, details }) => {
+            const isDanger = type === 'REVENUE_DROP';
+            return (
+                <div className={`mt-8 p-6 rounded-2xl border-l-4 shadow-sm animate-slide-up ${isDanger ? 'bg-red-50 border-red-400' : 'bg-sage-50 border-sage-500'}`}>
+                    <div class="flex items-start gap-4">
+                        <div className={`p-2 rounded-full ${isDanger ? 'bg-red-100 text-red-600' : 'bg-sage-100 text-sage-600'}`}>
+                            <i data-lucide={isDanger ? 'alert-triangle' : 'check-circle'} class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 className={`font-semibold text-lg ${isDanger ? 'text-red-800' : 'text-sage-800'}`}>
+                                {message}
+                            </h3>
+                            {details && details.map((d, i) => (
+                                <p key={i} className={`mt-1 text-sm ${isDanger ? 'text-red-700' : 'text-sage-700'}`}>
+                                    Drop of <strong>{d.drop_percentage}%</strong> detected on {d.date}.
+                                </p>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP ---
+
+        const App = () => {
+            const [data, setData] = useState(null);
+            const [kpis, setKpis] = useState(null);
+            const [signals, setSignals] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+
+            // Icon Refresher
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            }, [data, kpis, loading]);
+
+            const API_BASE = "http://localhost:8000";
+
+            const handleFileUpload = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        setLoading(true);
+                        setError(null);
+                        const jsonContent = JSON.parse(e.target.result);
+                        setData(jsonContent); // Store raw data for preview
+                        
+                        // Analyze Data (Mocking the API calls structure from your prompt)
+                        await fetchAnalytics(jsonContent);
+
+                    } catch (err) {
+                        setError("Invalid JSON file. Please check structure.");
+                        setLoading(false);
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            const fetchAnalytics = async (records) => {
+                try {
+                    // 1. Fetch KPIs
+                    const kpiRes = await fetch(`${API_BASE}/analytics/kpis`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ records })
+                    });
+                    
+                    if(!kpiRes.ok) throw new Error("Backend connection failed");
+                    const kpiData = await kpiRes.json();
+                    setKpis(kpiData);
+
+                    // 2. Fetch Decisions
+                    const signalRes = await fetch(`${API_BASE}/decisions/revenue-drop`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ records })
+                    });
+                    
+                    const signalData = await signalRes.json();
+                    setSignals(signalData);
+
+                } catch (err) {
+                    console.error(err);
+                    setError("Could not connect to backend. Is FastAPI running?");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // Helpers for formatting
+            const fmtMoney = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+
+            return (
+                <div class="min-h-screen flex flex-col items-center px-4 sm:px-6">
+                    <div class="w-full max-w-4xl pb-20">
+                        
+                        <Header />
+
+                        {/* Upload Section */}
+                        <div class="bg-white rounded-3xl p-8 shadow-sm border border-nature-200 text-center transition-all hover:shadow-md">
+                            <input 
+                                type="file" 
+                                accept=".json"
+                                onChange={handleFileUpload} 
+                                id="fileInput" 
+                                class="hidden" 
+                            />
+                            
+                            {!loading ? (
+                                <label for="fileInput" class="cursor-pointer flex flex-col items-center group">
+                                    <div class="w-16 h-16 bg-sage-50 text-sage-600 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 group-active:scale-95">
+                                        <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                                    </div>
+                                    <span class="text-lg font-medium text-nature-800 group-hover:text-sage-600 transition-colors">
+                                        {data ? "Upload different file" : "Drop JSON file here"}
+                                    </span>
+                                    <span class="text-nature-400 text-sm mt-1">or click to browse</span>
+                                </label>
+                            ) : (
+                                <div class="flex flex-col items-center animate-pulse">
+                                    <div class="w-16 h-16 bg-nature-100 rounded-full flex items-center justify-center mb-4">
+                                        <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-nature-500"></i>
+                                    </div>
+                                    <span class="text-nature-500">Analyzing data streams...</span>
+                                </div>
+                            )}
+
+                            {error && (
+                                <div class="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm inline-block">
+                                    {error}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Results Dashboard */}
+                        {kpis && !loading && (
+                            <div class="mt-12 space-y-8">
+                                
+                                {/* Section Title */}
+                                <div class="flex items-center gap-2 mb-6 opacity-80">
+                                    <div class="h-px bg-nature-200 flex-1"></div>
+                                    <span class="text-xs font-semibold text-nature-400 uppercase tracking-widest">Live Analysis</span>
+                                    <div class="h-px bg-nature-200 flex-1"></div>
+                                </div>
+
+                                {/* KPI Grid */}
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <KPICard 
+                                        title="Total Revenue" 
+                                        value={fmtMoney(kpis.total_revenue)} 
+                                        icon="dollar-sign" 
+                                        delay="0.1s" 
+                                    />
+                                    <KPICard 
+                                        title="Avg Order Value" 
+                                        value={fmtMoney(kpis.average_order_value)} 
+                                        icon="shopping-bag" 
+                                        delay="0.2s" 
+                                    />
+                                    <KPICard 
+                                        title="Active Customers" 
+                                        value={kpis.active_customers} 
+                                        icon="users" 
+                                        delay="0.3s" 
+                                    />
+                                </div>
+
+                                {/* Decision Engine Output */}
+                                {signals && signals.signals && signals.signals.length > 0 ? (
+                                    <DecisionAlert 
+                                        type="REVENUE_DROP" 
+                                        message="Anomaly Detected: Revenue Drop" 
+                                        details={signals.signals} 
+                                    />
+                                ) : (
+                                    <DecisionAlert 
+                                        type="OK" 
+                                        message="Systems Nominal: No anomalies detected" 
+                                    />
+                                )}
+
+                                {/* Data Preview (Clean Table) */}
+                                <div class="mt-12 bg-white rounded-2xl border border-nature-200 overflow-hidden shadow-sm animate-slide-up" style={{animationDelay: '0.4s'}}>
+                                    <div class="px-6 py-4 bg-nature-50 border-b border-nature-100">
+                                        <h3 class="text-sm font-semibold text-nature-600 uppercase">Data Preview</h3>
+                                    </div>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-sm text-left">
+                                            <thead class="text-xs text-nature-500 bg-white border-b border-nature-100">
+                                                <tr>
+                                                    <th class="px-6 py-3 font-medium">Date</th>
+                                                    <th class="px-6 py-3 font-medium">Customer</th>
+                                                    <th class="px-6 py-3 font-medium">Country</th>
+                                                    <th class="px-6 py-3 font-medium text-right">Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-nature-50">
+                                                {data.slice(0, 5).map((row, i) => (
+                                                    <tr key={i} class="hover:bg-nature-50 transition-colors">
+                                                        <td class="px-6 py-4 text-nature-800">{row.transaction_date}</td>
+                                                        <td class="px-6 py-4 text-nature-600">{row.customer_id}</td>
+                                                        <td class="px-6 py-4 text-nature-600">{row.country}</td>
+                                                        <td class="px-6 py-4 text-nature-800 font-medium text-right">{fmtMoney(row.total_amount)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {data.length > 5 && (
+                                            <div class="px-6 py-3 bg-nature-50 text-center text-xs text-nature-400">
+                                                Showing 5 of {data.length} records
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
