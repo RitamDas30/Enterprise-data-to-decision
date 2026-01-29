@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Large / raw data
+*.csv
+
+# Generated artifacts
+storage/warehouse/analytics/
+
+# OS
+.DS_Store
