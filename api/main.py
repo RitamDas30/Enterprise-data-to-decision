@@ -20,6 +20,13 @@ app.add_middleware(
 app.include_router(analytics.router)
 app.include_router(decisions.router)
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+# @app.get("/health")
+# def health():
+#     return {"status": "ok"}
+
+@app.get("/")
+def root():
+    return {
+        "service": "Enterprise Data-to-Decision Platform",
+        "status": "running"
+    }
