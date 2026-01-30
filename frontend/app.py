@@ -1,9 +1,10 @@
 import streamlit as st
-import requests
 import pandas as pd
 import json
 
-API_BASE = "http://localhost:8000"
+from analytics.kpis.revenue_kpis import compute_revenue_kpis
+from analytics.statistics.daily_trends import daily_revenue_trend
+from decision_engine.revenue_signals import detect_revenue_drop
 
 st.set_page_config(
     page_title="Enterprise Data-to-Decision Platform",
@@ -35,50 +36,38 @@ st.sidebar.markdown(
 # ---------------- Main ----------------
 if uploaded:
     records = json.load(uploaded)
+    df = pd.DataFrame(records)
 
     col1, col2 = st.columns(2)
 
     # -------- KPIs --------
     with col1:
-        st.subheader("📈 Business KPIs")
+        st.subheader(" Business KPIs")
 
-        kpi_resp = requests.post(
-            f"{API_BASE}/analytics/kpis",
-            json={"records": records}
-        )
+        kpis = compute_revenue_kpis(df)
 
-        if kpi_resp.status_code == 200:
-            kpis = kpi_resp.json()
-            st.metric("Total Revenue", round(kpis["total_revenue"], 2))
-            st.metric("Avg Order Value", round(kpis["average_order_value"], 2))
-            st.metric("Active Customers", kpis["active_customers"])
-        else:
-            st.error("Failed to fetch KPIs")
+        st.metric("Total Revenue", round(kpis["total_revenue"], 2))
+        st.metric("Avg Order Value", round(kpis["average_order_value"], 2))
+        st.metric("Active Customers", kpis["active_customers"])
 
     # -------- Decision Signals --------
     with col2:
-        st.subheader("🚨 Decision Signals")
+        st.subheader(" Decision Signals")
 
-        signal_resp = requests.post(
-            f"{API_BASE}/decisions/revenue-drop",
-            json={"records": records}
-        )
+        trend_df = daily_revenue_trend(df)
+        signals = detect_revenue_drop(trend_df)
 
-        if signal_resp.status_code == 200:
-            signals = signal_resp.json().get("signals", [])
-            if signals:
-                st.warning("Revenue Drop Detected")
-                st.json(signals)
-            else:
-                st.success("No abnormal revenue drops detected")
+        if signals.get("signals"):
+            st.warning("Revenue Drop Detected")
+            st.json(signals["signals"])
         else:
-            st.error("Failed to fetch signals")
+            st.success("No abnormal revenue drops detected")
 
     st.markdown("---")
 
     # -------- Preview Data --------
-    st.subheader("🔍 Data Preview")
-    st.dataframe(pd.DataFrame(records).head(20))
+    st.subheader(" Data Preview")
+    st.dataframe(df.head(20))
 
 else:
     st.info("Upload a JSON file to explore KPIs and decision signals")
