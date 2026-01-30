@@ -59,23 +59,37 @@ if uploaded:
         st.metric("Active Customers", kpis["active_customers"])
 
     # -------- Decision Signals --------
-    with col2:
-        st.subheader(" Decision Signals")
+#     with col2:
+#         st.subheader(" Decision Signals")
 
-        trend_df = daily_revenue_trend(df)
-        signals = detect_revenue_drop(trend_df)
+#         trend_df = daily_revenue_trend(df)
+#         signals = detect_revenue_drop(trend_df)
 
-        if signals.get("signals"):
-            st.warning("Revenue Drop Detected")
-            st.json(signals["signals"])
-        else:
-            st.success("No abnormal revenue drops detected")
+#         if signals.get("signals"):
+#             st.warning("Revenue Drop Detected")
+#             st.json(signals["signals"])
+#         else:
+#             st.success("No abnormal revenue drops detected")
 
-    st.markdown("---")
+#     st.markdown("---")
 
-    # -------- Preview Data --------
-    st.subheader(" Data Preview")
-    st.dataframe(df.head(20))
+#     # -------- Preview Data --------
+#     st.subheader(" Data Preview")
+#     st.dataframe(df.head(20))
 
-else:
-    st.info("Upload a JSON file to explore KPIs and decision signals")
+# else:
+#     st.info("Upload a JSON file to explore KPIs and decision signals")
+
+# -------- Decision Signals --------
+with col2:
+    st.subheader("🚨 Decision Signals")
+
+    trend_df = daily_revenue_trend(df)
+    signals = detect_revenue_drop(trend_df)
+
+    if signals:
+        st.warning("Revenue Drop Detected")
+        st.json(signals)
+    else:
+        st.success("No abnormal revenue drops detected")
+
