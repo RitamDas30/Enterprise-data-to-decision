@@ -2,6 +2,14 @@ import streamlit as st
 import pandas as pd
 import json
 
+import sys
+from pathlib import Path
+
+# Add project root to PYTHONPATH
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT_DIR))
+
+
 from analytics.kpis.revenue_kpis import compute_revenue_kpis
 from analytics.statistics.daily_trends import daily_revenue_trend
 from decision_engine.revenue_signals import detect_revenue_drop
