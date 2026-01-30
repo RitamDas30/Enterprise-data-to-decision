@@ -82,7 +82,7 @@ if uploaded:
 
 # -------- Decision Signals --------
 with col2:
-    st.subheader("🚨 Decision Signals")
+    st.subheader(" Decision Signals")
 
     trend_df = daily_revenue_trend(df)
     signals = detect_revenue_drop(trend_df)
